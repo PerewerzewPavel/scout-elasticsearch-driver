@@ -20,6 +20,11 @@ trait Searchable
     private $highlight = null;
 
     /**
+     * @var array|null
+     */
+    protected $suggestion = null;
+
+    /**
      * @var bool
      */
     private static $isSearchableTraitBooted = false;
@@ -56,6 +61,12 @@ trait Searchable
         }
 
         return $indexConfigurator;
+    }
+
+    public function getSuggestRules()
+    {
+        return isset($this->suggestRules) && count($this->suggestRules) > 0 ?
+            $this->suggestRules : [SuggestRule::class];
     }
 
     /**
@@ -131,5 +142,21 @@ trait Searchable
     public function getHighlightAttribute()
     {
         return $this->highlight;
+    }
+
+    /**
+     * @param Highlight $value
+     */
+    public function setSuggestAttribute(Suggest $value)
+    {
+        $this->suggest = $value;
+    }
+
+    /**
+     * @return Highlight|null
+     */
+    public function getSuggestAttribute()
+    {
+        return $this->suggest;
     }
 }

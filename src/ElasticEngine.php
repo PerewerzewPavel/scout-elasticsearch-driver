@@ -90,9 +90,23 @@ class ElasticEngine extends Engine
         if ($builder instanceof SearchBuilder) {
             $searchRules = $builder->rules ?: $builder->model->getSearchRules();
 
-            foreach ($searchRules as $rule) {
-                $payload = new TypePayload($builder->model);
+            $payload = new TypePayload($builder->model);
 
+            $suggestRules = $builder->suggestRules ?: $builder->model->getSuggestRules();
+
+            foreach ($suggestRules as $rule) {
+                if (is_callable($rule)) {
+                    $payload->setIfNotEmpty('body.suggest', call_user_func($rule, $builder));
+                } else {
+                    /** @var \ScoutElastic\SuggestRule $ruleEntity */
+                    $ruleEntity = new $rule($builder);
+                    $payload->setIfNotEmpty('body.suggest', $ruleEntity->buildSuggestPayload());
+                }
+
+                $payloadCollection->push($payload);
+            }
+
+            foreach ($searchRules as $rule) {
                 if (is_callable($rule)) {
                     $payload->setIfNotEmpty('body.query.bool', call_user_func($rule, $builder));
                 } else {
@@ -267,8 +281,18 @@ class ElasticEngine extends Engine
      */
     public function map($results, $model)
     {
+        $collect = collect();
+        if(isset($results['suggest'])){
+            $suggestion = $results['suggest'];
+        }
+
+
         if ($this->getTotalCount($results) == 0) {
-            return Collection::make();
+            if(isset($suggestion)){
+                return collect(['data' => []])->merge(compact('suggestion'));
+            } else {
+                return Collection::make();
+            }
         }
 
         $primaryKey = $model->getKeyName();
@@ -290,22 +314,31 @@ class ElasticEngine extends Engine
             ->get($columns)
             ->keyBy($primaryKey);
 
-        return Collection::make($results['hits']['hits'])
-            ->map(function ($hit) use ($models) {
-                $id = $hit['_id'];
 
-                if (isset($models[$id])) {
-                    $model = $models[$id];
+            $items = Collection::make($results['hits']['hits'])
+                ->map(function ($hit) use ($models) {
+                    $id = $hit['_id'];
 
-                    if (isset($hit['highlight'])) {
-                        $model->highlight = new Highlight($hit['highlight']);
+                    if (isset($models[$id])) {
+                        $model = $models[$id];
+
+                        if (isset($hit['highlight'])) {
+                            $model->highlight = new Highlight($hit['highlight']);
+                        }
+
+                        $model->score = $hit['_score'];
+
+                        return $model;
                     }
+                })
+                ->filter()
+                ->values();
 
-                    return $model;
-                }
-            })
-            ->filter()
-            ->values();
+        if(isset($suggestion)){
+            return collect(['data' => $items])->merge(compact('suggestion'));
+        }
+
+        return $items;
     }
 
     /**
@@ -314,5 +347,17 @@ class ElasticEngine extends Engine
     public function getTotalCount($results)
     {
         return $results['hits']['total'];
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getSuggest($results)
+    {
+        if (isset($results['suggest'])) {
+            return new Suggest($results['suggest']);
+        }
+
+        return null;
     }
 }

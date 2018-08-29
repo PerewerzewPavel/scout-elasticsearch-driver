@@ -11,6 +11,8 @@ class SearchBuilder extends FilterBuilder
      */
     public $rules = [];
 
+    public $suggestRules = [];
+
     /**
      * @param Model $model
      * @param string $query
@@ -31,6 +33,13 @@ class SearchBuilder extends FilterBuilder
     public function rule($rule)
     {
         $this->rules[] = $rule;
+
+        return $this;
+    }
+
+    public function suggestRules($rule)
+    {
+        $this->suggestRules[] = $rule;
 
         return $this;
     }
