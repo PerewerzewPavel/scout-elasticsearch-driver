@@ -25,6 +25,11 @@ trait Searchable
     protected $suggestion = null;
 
     /**
+     * @var string|null
+     */
+    private $indexName = null;
+
+    /**
      * @var bool
      */
     private static $isSearchableTraitBooted = false;
@@ -58,9 +63,14 @@ trait Searchable
 
             $indexConfiguratorClass = $this->indexConfigurator;
             $indexConfigurator = new $indexConfiguratorClass;
+            $indexConfigurator->name = $this->getIndexName() ?? $indexConfigurator->getName();
         }
 
         return $indexConfigurator;
+    }
+
+    private function getIndexName(){
+        return $this->indexName;
     }
 
     public function getSuggestRules()
