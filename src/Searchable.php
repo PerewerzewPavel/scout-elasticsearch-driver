@@ -7,6 +7,7 @@ use Laravel\Scout\Searchable as ScoutSearchable;
 use ScoutElastic\Builders\FilterBuilder;
 use ScoutElastic\Builders\SearchBuilder;
 use \Exception;
+use Illuminate\Support\Str;
 
 trait Searchable
 {
@@ -70,7 +71,7 @@ trait Searchable
     }
 
     private function getIndicesName(){
-        return $this->indicesName;
+        return config('scout.prefix') . Str::snake($this->indicesName);
     }
 
     public function getSuggestRules()
