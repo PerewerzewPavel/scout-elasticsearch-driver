@@ -26,11 +26,6 @@ trait Searchable
     protected $suggestion = null;
 
     /**
-     * @var string|null
-     */
-    protected $indicesName = null;
-
-    /**
      * @var bool
      */
     private static $isSearchableTraitBooted = false;
@@ -64,14 +59,14 @@ trait Searchable
 
             $indexConfiguratorClass = $this->indexConfigurator;
             $indexConfigurator = new $indexConfiguratorClass;
-            $indexConfigurator->name = $this->getIndicesName() ?? $indexConfigurator->getName();
+            $indexConfigurator->setName($this->getIndicesName() ?? $indexConfigurator->getName());
         }
 
         return $indexConfigurator;
     }
 
-    private function getIndicesName(){
-        return config('scout.prefix') . Str::snake($this->indicesName);
+    public function getIndicesName(){
+        return Str::snake($this->indicesName);
     }
 
     public function getSuggestRules()

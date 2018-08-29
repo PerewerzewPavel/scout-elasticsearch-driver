@@ -2,6 +2,7 @@
 
 namespace ScoutElastic\Console;
 
+use App\Models\Clinic;
 use Illuminate\Console\Command;
 use ScoutElastic\Console\Features\RequiresIndexConfiguratorArgument;
 use ScoutElastic\Facades\ElasticClient;
@@ -26,18 +27,29 @@ class ElasticIndexCreateCommand extends Command
     {
         $configurator = $this->getIndexConfigurator();
 
-        $payload = (new IndexPayload($configurator))
-            ->setIfNotEmpty('body.settings', $configurator->getSettings())
-            ->setIfNotEmpty('body.mappings._default_', $configurator->getDefaultMapping())
-            ->get();
 
-        ElasticClient::indices()
-            ->create($payload);
+        if(!empty($configurator->getUsedModel())){
 
-        $this->info(sprintf(
-            'The %s index was created!',
-            $configurator->getName()
-        ));
+            foreach ($configurator->getUsedModel() as $model){
+                $configurator->setName(call_user_func([(new $model()), 'getIndicesName']));
+
+                $payload = (new IndexPayload($configurator))
+                    ->setIfNotEmpty('body.settings', $configurator->getSettings())
+                    ->setIfNotEmpty('body.mappings._default_', $configurator->getDefaultMapping())
+                    ->get();
+
+                ElasticClient::indices()->create($payload);
+
+                $this->info(sprintf('The %s index was created!', $configurator->getName()));
+            }
+        } else {
+
+            $payload = (new IndexPayload($configurator))->setIfNotEmpty('body.settings', $configurator->getSettings())->setIfNotEmpty('body.mappings._default_', $configurator->getDefaultMapping())->get();
+
+            ElasticClient::indices()->create($payload);
+
+            $this->info(sprintf('The %s index was created!', $configurator->getName()));
+        }
     }
 
     protected function createWriteAlias()

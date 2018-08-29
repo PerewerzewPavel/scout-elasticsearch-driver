@@ -19,6 +19,11 @@ abstract class IndexConfigurator
     /**
      * @var array
      */
+    protected $usedModel = [];
+
+    /**
+     * @var array
+     */
     protected $defaultMapping = [];
 
     /**
@@ -44,5 +49,21 @@ abstract class IndexConfigurator
     public function getDefaultMapping()
     {
         return $this->defaultMapping;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * @return array
+     */
+    public function getUsedModel(): array
+    {
+        return $this->usedModel;
     }
 }
