@@ -366,11 +366,13 @@ class FilterBuilder extends Builder
 
     public function whereMatch($field, $value)
     {
-        $this->wheres['must'][] = [
-            'match' => [
-                $field => $value,
-            ],
-        ];
+        if(!is_null($value)) {
+            $this->wheres['must'][] = [
+                'match' => [
+                    $field => $value,
+                ],
+            ];
+        }
 
         return $this;
     }
