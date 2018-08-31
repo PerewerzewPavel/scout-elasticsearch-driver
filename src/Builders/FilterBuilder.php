@@ -343,7 +343,7 @@ class FilterBuilder extends Builder
 
         return $this;
     }
-    
+
     /**
      * @see https://www.elastic.co/guide/en/elasticsearch/guide/current/querying-geo-shapes.html Querying Geo Shapes
      *
@@ -363,7 +363,18 @@ class FilterBuilder extends Builder
 
         return $this;
     }
-    
+
+    public function whereMatch($field, $value)
+    {
+        $this->wheres['must'][] = [
+            'match' => [
+                $field => $value,
+            ],
+        ];
+
+        return $this;
+    }
+
     /**
      * @param string $field
      * @param string $direction
