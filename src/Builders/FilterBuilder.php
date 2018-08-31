@@ -65,6 +65,10 @@ class FilterBuilder extends Builder
      */
     public function where($field, $value)
     {
+
+        if(is_null($value)) {
+            return $this;
+        }
         $args = func_get_args();
 
         if (count($args) == 3) {
