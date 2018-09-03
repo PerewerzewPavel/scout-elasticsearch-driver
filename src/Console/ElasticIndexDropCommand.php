@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use ScoutElastic\Console\Features\RequiresIndexConfiguratorArgument;
 use ScoutElastic\Facades\ElasticClient;
 use ScoutElastic\Payloads\IndexPayload;
+use ScoutElastic\Payloads\RawPayload;
 
 class ElasticIndexDropCommand extends Command
 {
@@ -25,15 +26,34 @@ class ElasticIndexDropCommand extends Command
     {
         $configurator = $this->getIndexConfigurator();
 
-        $payload = (new IndexPayload($configurator))
-            ->get();
+        if (! empty($configurator->getUsedModel())) {
 
-        ElasticClient::indices()
-            ->delete($payload);
+            foreach ($configurator->getUsedModel() as $model) {
+                $configurator->setName(call_user_func([(new $model()), 'getIndicesName']));
+                if ( $this->isExists($configurator->getName())) {
+                    $payload = (new IndexPayload($configurator))->get();
 
-        $this->info(sprintf(
-            'The index %s was deleted!',
-            $configurator->getName()
-        ));
+                    ElasticClient::indices()->delete($payload);
+
+                    $this->info(sprintf('The index %s was deleted!', $configurator->getName()));
+                } else {
+                    $this->info(sprintf('The %s index already deleted!', $configurator->getName()));
+                }
+            }
+        } else {
+
+            $payload = (new IndexPayload($configurator))->get();
+
+            ElasticClient::indices()->delete($payload);
+
+            $this->info(sprintf('The index %s was deleted!', $configurator->getName()));
+        }
+    }
+
+    protected function isExists($name)
+    {
+        $payload = (new RawPayload())->set('index', $name)->get();
+
+        return ElasticClient::indices()->exists($payload);
     }
 }
