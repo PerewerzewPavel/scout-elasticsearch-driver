@@ -54,6 +54,20 @@ class FilterBuilder extends Builder
         }
     }
 
+    public function whereWildcard($field, $value){
+        if(is_null($value)) {
+            return $this;
+        }
+
+        $this->wheres['must'][] = [
+            'term' => [
+                $field => $value
+            ]
+        ];
+
+        return $this;
+    }
+
     /**
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-term-query.html Term query
      * @see https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-range-query.html Range query
