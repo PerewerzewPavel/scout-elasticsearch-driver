@@ -60,7 +60,7 @@ class FilterBuilder extends Builder
         }
 
         $this->wheres['must'][] = [
-            'term' => [
+            'wildcard' => [
                 $field => $value
             ]
         ];
